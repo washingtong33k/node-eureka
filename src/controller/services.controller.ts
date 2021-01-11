@@ -35,26 +35,8 @@ export class ServicesController extends ControllerBase implements ControllerInte
 
     if (registered) {
       for (const route of service.routes) {
-        const baseUrl = `/api/${service.name}/${route.uri}`;
-
+        const baseUrl = `/api/${service.name}${route.uri}`;
         console.info(`[${service.name}] ${route.method}: ${baseUrl}`);
-
-        switch (route.method) {
-          default:
-            this.app.get(baseUrl, async (req: any, res: any) => {
-              let response: any = await this.httpClient.doGetRequest(`${service.baseUrl}/${route.uri}`)
-                .catch(err => {
-                  console.log(err);
-
-                  res.status(500).send({
-                    status: 'ERROR',
-                    err
-                  });
-                });
-
-              res.status(200).send(response);
-            });
-        }
       }
 
       return true;

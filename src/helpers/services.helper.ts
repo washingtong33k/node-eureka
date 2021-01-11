@@ -22,4 +22,20 @@ export class ServicesHelper {
   public static hasService(serviceName: string) {
     return ServicesHelper.registeredServices.filter(obj => obj.name == serviceName).length > 0;
   }
+
+  public static getService(serviceName: string): Service | any {
+    const servicesFiltered = ServicesHelper.registeredServices.filter(obj => obj.name == serviceName);
+
+    if (servicesFiltered.length > 0) {
+      return servicesFiltered[0];
+    }
+
+    return null;
+  }
+
+  public static parseHeaders(headers: any, service: Service) {
+    headers.host = service.baseUrl;
+
+    return headers;
+  }
 }
