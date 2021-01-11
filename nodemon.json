@@ -1,0 +1,7 @@
+{
+  "ignore": ["test/*", "docs/*"],
+  "watch": [
+    "./src"
+  ],
+  "ext": "ts"
+}
