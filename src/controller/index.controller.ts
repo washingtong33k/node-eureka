@@ -17,5 +17,9 @@ export class IndexController extends ControllerBase implements ControllerInterfa
     this.app.get('/status', async (req: any, res: any) => {
       res.status(200).send(ServicesHelper.registeredServices);
     });
+
+    this.app.get('/handshake', async (req: any, res: any) => {
+      res.status(200).send({success: true});
+    });
   }
 }
