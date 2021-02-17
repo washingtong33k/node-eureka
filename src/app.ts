@@ -52,10 +52,7 @@ app.get('/api/:service/*', async (req: any, res: any) => {
         res.status(200).send(response.data);
       })
       .catch(err => {
-        res.status(500).send({
-          status: 'ERROR',
-          err
-        });
+        res.status(err.response.status).send(err.response.data);
       });
   } else {
     res.status(404).send({status: 'NOT_FOUND'});
