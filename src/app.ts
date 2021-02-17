@@ -2,6 +2,7 @@ import express from 'express';
 import http from 'http';
 import https from 'https';
 import fs from 'fs';
+import cors from 'cors';
 import bodyParser from 'body-parser';
 import config from './config';
 import {IndexController} from "./controller/index.controller";
@@ -15,6 +16,12 @@ console.log('Starting server using stage ' + stage);
 const app = express();
 const port = config.appSettings.app.port || 3000;
 const httpClient: HttpClient = new HttpClient();
+const enableCors = process.env.CORS && process.env.CORS === '1' || false;
+
+if (enableCors) {
+  console.info('CORS enabled');
+  app.use(cors());
+}
 
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
@@ -38,8 +45,9 @@ app.get('/api/:service/*', async (req: any, res: any) => {
     }
 
     const headers = ServicesHelper.parseHeaders(req.headers, service);
+    const bodyParams = req.body;
 
-    httpClient.doGetRequest(url, headers)
+    httpClient.doRequest(url, bodyParams, req.method, headers)
       .then(response => {
         res.status(200).send(response.data);
       })

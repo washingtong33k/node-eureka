@@ -11,7 +11,7 @@ export class ServicesHelper {
         return true;
       } else {
         console.error(`There's already a service registered with the name ${service.name}`);
-        return false;
+        return true;
       }
     } else {
       console.error(`Please provide a name for the service`);
