@@ -9,6 +9,7 @@ import {IndexController} from "./controller/index.controller";
 import {ServicesController} from "./controller/services.controller";
 import {HttpClient} from "./helpers/http.client";
 import {ServicesHelper} from "./helpers/services.helper";
+import fileUpload from 'express-fileupload'
 const stage = config.appSettings.app.stage;
 
 console.log('Starting server using stage ' + stage);
@@ -25,6 +26,7 @@ if (enableCors) {
 
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+app.use(fileUpload());
 
 app.use((req, res, next) => {
   if (stage === 'production' && !req.secure) {
@@ -34,7 +36,7 @@ app.use((req, res, next) => {
   }
 });
 
-app.get('/api/:service/*', async (req: any, res: any) => {
+const handleRequest = async (req: any, res: any) => {
   const service = ServicesHelper.getService(req.params.service);
 
   if (service) {
@@ -43,102 +45,29 @@ app.get('/api/:service/*', async (req: any, res: any) => {
     if (req.params['0']) {
       url += `/${req.params['0']}`;
     }
+
+    console.log(`Handling [${service.name}][${req.method}] ${url}`);
 
     const headers = ServicesHelper.parseHeaders(req.headers, service);
     const bodyParams = req.body;
 
     httpClient.doRequest(url, bodyParams, req.method, headers)
       .then(response => {
-        res.status(200).send(response.data);
+        return res.status(200).send(response.data);
       })
       .catch(err => {
-        res.status(err.response.status).send(err.response.data);
+        return res.status(err.response.status).send(err.response.data);
       });
   } else {
-    res.status(404).send({status: 'NOT_FOUND'});
+    return res.status(404).send({status: 'NOT_FOUND'});
   }
-});
+};
 
-app.post('/api/:service/*', async (req: any, res: any) => {
-  const service = ServicesHelper.getService(req.params.service);
-
-  if (service) {
-    let url = `${service.baseUrl}`;
-
-    if (req.params['0']) {
-      url += `/${req.params['0']}`;
-    }
-
-    const headers = ServicesHelper.parseHeaders(req.headers, service);
-
-    httpClient.doPostRequest(url, req.body, headers)
-      .then(response => {
-        res.status(200).send(response.data);
-      })
-      .catch(err => {
-        res.status(500).send({
-          status: 'ERROR',
-          err
-        });
-      });
-  } else {
-    res.status(404).send({status: 'NOT_FOUND'});
-  }
-});
-
-app.put('/api/:service/*', async (req: any, res: any) => {
-  const service = ServicesHelper.getService(req.params.service);
-
-  if (service) {
-    let url = `${service.baseUrl}`;
-
-    if (req.params['0']) {
-      url += `/${req.params['0']}`;
-    }
-
-    const headers = ServicesHelper.parseHeaders(req.headers, service);
-
-    httpClient.doPutRequest(url, req.body, headers)
-      .then(response => {
-        res.status(200).send(response.data);
-      })
-      .catch(err => {
-        res.status(500).send({
-          status: 'ERROR',
-          err
-        });
-      });
-  } else {
-    res.status(404).send({status: 'NOT_FOUND'});
-  }
-});
-
-app.delete('/api/:service/*', async (req: any, res: any) => {
-  const service = ServicesHelper.getService(req.params.service);
-
-  if (service) {
-    let url = `${service.baseUrl}`;
-
-    if (req.params['0']) {
-      url += `/${req.params['0']}`;
-    }
-
-    const headers = ServicesHelper.parseHeaders(req.headers, service);
-
-    httpClient.doDeleteRequest(url, headers)
-      .then(response => {
-        res.status(200).send(response.data);
-      })
-      .catch(err => {
-        res.status(500).send({
-          status: 'ERROR',
-          err
-        });
-      });
-  } else {
-    res.status(404).send({status: 'NOT_FOUND'});
-  }
-});
+app.options('/api/:service/*', handleRequest);
+app.get('/api/:service/*', handleRequest);
+app.post('/api/:service/*', handleRequest);
+app.put('/api/:service/*', handleRequest);
+app.delete('/api/:service/*', handleRequest);
 
 new IndexController(app);
 new ServicesController(app);
