@@ -9,7 +9,8 @@ import {IndexController} from "./controller/index.controller";
 import {ServicesController} from "./controller/services.controller";
 import {HttpClient} from "./helpers/http.client";
 import {ServicesHelper} from "./helpers/services.helper";
-import fileUpload from 'express-fileupload'
+import fileUpload from 'express-fileupload';
+import FormData from 'form-data';
 const stage = config.appSettings.app.stage;
 
 console.log('Starting server using stage ' + stage);
@@ -26,7 +27,10 @@ if (enableCors) {
 
 app.use(bodyParser.json()); // support json encoded bodies
 app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
-app.use(fileUpload());
+app.use(fileUpload({
+  useTempFiles : true,
+  tempFileDir : '/tmp/'
+}));
 
 app.use((req, res, next) => {
   if (stage === 'production' && !req.secure) {
@@ -48,8 +52,37 @@ const handleRequest = async (req: any, res: any) => {
 
     console.log(`Handling [${service.name}][${req.method}] ${url}`);
 
-    const headers = ServicesHelper.parseHeaders(req.headers, service);
-    const bodyParams = req.body;
+    let headers = ServicesHelper.parseHeaders(req.headers, service);
+    let bodyParams = req.body;
+
+    if (req.files && Object.keys(req.files).length > 0) {
+      const formData = new FormData();
+
+      for (const index in req.files) {
+        if (req.files[index]) {
+          const file = fs.readFileSync(req.files[index].tempFilePath);
+
+          if (req.files[index]) {
+            formData.append(index, file, req.files[index].name);
+          }
+
+          fs.unlinkSync(req.files[index].tempFilePath);
+        }
+      }
+
+      for (const index in req.body) {
+        if (req.body[index]) {
+          formData.append(index, req.body[index]);
+        }
+      }
+
+      bodyParams = formData.getBuffer();
+
+      headers = {
+        ...headers,
+        ...formData.getHeaders()
+      };
+    }
 
     httpClient.doRequest(url, bodyParams, req.method, headers)
       .then(response => {
