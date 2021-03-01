@@ -5,10 +5,12 @@ import {ServicesHelper} from "../helpers/services.helper";
 
 export class IndexController extends ControllerBase implements ControllerInterface{
   private app: any | Express = null;
+  private instanceId = '';
 
-  constructor(app: Express) {
+  constructor(app: Express, instanceId: string) {
     super();
     this.app = app;
+    this.instanceId = instanceId;
 
     this.initController();
   }
@@ -19,7 +21,7 @@ export class IndexController extends ControllerBase implements ControllerInterfa
     });
 
     this.app.get('/handshake', async (req: any, res: any) => {
-      res.status(200).send({success: true});
+      res.status(200).send({instance: this.instanceId});
     });
   }
 }

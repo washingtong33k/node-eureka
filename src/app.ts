@@ -11,6 +11,7 @@ import {HttpClient} from "./helpers/http.client";
 import {ServicesHelper} from "./helpers/services.helper";
 import fileUpload from 'express-fileupload';
 import FormData from 'form-data';
+import {v4 as uuidv4} from "uuid";
 const stage = config.appSettings.app.stage;
 
 console.log('Starting server using stage ' + stage);
@@ -102,8 +103,12 @@ app.post('/api/:service/*', handleRequest);
 app.put('/api/:service/*', handleRequest);
 app.delete('/api/:service/*', handleRequest);
 
-new IndexController(app);
-new ServicesController(app);
+const instanceId = uuidv4();
+
+console.log(`Instance Id: ${instanceId}`);
+
+new IndexController(app, instanceId);
+new ServicesController(app, instanceId);
 
 const httpServer = http.createServer(app);
 
@@ -111,7 +116,7 @@ httpServer.listen(port, (err?: any) => {
   if (err) {
     return console.error(err);
   }
-  return console.log(`server is listening on ${port}`);
+  return console.log(`Server is listening on ${port}`);
 });
 
 if (stage === 'production') {
