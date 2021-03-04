@@ -10,9 +10,9 @@ export class HttpClient {
       case 'POST':
         return this.doPostRequest(url, data, headers);
       case 'PUT':
-        return this.doPostRequest(url, data, headers);
+        return this.doPutRequest(url, data, headers);
       case 'DELETE':
-        return this.doPostRequest(url, headers);
+        return this.doDeleteRequest(url, headers);
     }
   }
 
